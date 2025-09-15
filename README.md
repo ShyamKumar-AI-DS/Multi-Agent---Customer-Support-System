@@ -36,6 +36,12 @@ Provides instructions, sample data download, and system details.
 
 ---
 
+### 📊 Architecture Diagram
+
+  <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/145a6ef0-5f76-4d35-bd7e-509af06627d0" />
+
+---
+
 ## 📦 Future Improvements
 
 - ✅ Database integration (SQLite/Postgres) for persistence  
