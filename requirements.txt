@@ -7,6 +7,6 @@ pandas
 scikit-learn
 crewai
 crewai-tools
-chromadb
+chromadb>=0.5.0
 python-dotenv
 sentence-transformers
