@@ -10,3 +10,4 @@ crewai-tools
 chromadb>=0.5.0
 python-dotenv
 sentence-transformers
+sqlite3>=3.50.4

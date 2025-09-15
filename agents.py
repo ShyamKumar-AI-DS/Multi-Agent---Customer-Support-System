@@ -4,8 +4,6 @@ from llm import llm
 from typing import List, Optional, Dict, Any,Literal
 from pydantic import BaseModel
 from vectordb import search_chroma
-from datetime import datetime
-
 TICKET_DB: Dict[str, Dict[str, Any]] = {}
 
 class TicketIn(BaseModel):
