@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+httpx
+python-multipart
+pandas
+scikit-learn
+crewai
+crewai-tools
+chromadb
+python-dotenv
+sentence-transformers
