@@ -1,8 +1,8 @@
-# 🎧 Multi-Agent Customer Support System (CrewAI + Streamlit)
+# 🎧 Multi-Agent Customer Support System (CrewAI + Gradio)
 
 This project is an **AI-powered customer support system** that leverages **CrewAI multi-agent orchestration** to process customer tickets, generate empathetic replies, and assist support teams with internal notes.
 
-It provides an interactive **Streamlit UI** for:
+It provides an interactive **Gradio UI** for:
 
 - 📂 Bulk uploading tickets from CSV  
 - 🧠 Converting tickets into a Knowledge Base (KB)  
@@ -31,7 +31,7 @@ Ticket descriptions are automatically converted into KB chunks, enabling more co
 ### 💡 Health Check
 Quick system status: number of tickets + KB chunks available.
 
-### 📊 Streamlit Sidebar
+### 📊 Gradio Sidebar
 Provides instructions, sample data download, and system details.
 
 ---
@@ -61,7 +61,7 @@ Provides instructions, sample data download, and system details.
 
 ## 🧠 Powered By
 
-- Python + Streamlit  
+- Python + Gradio
 - Pandas  
 - CrewAI Agents  
 - AsyncIO  
