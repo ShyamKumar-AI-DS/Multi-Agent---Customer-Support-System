@@ -178,6 +178,16 @@ with gr.Blocks(title="Multi-Agent Customer Support (CrewAI)") as demo:
             gr.Markdown("- Get customer-facing replies + internal notes")
             gr.Markdown("---")
             gr.Markdown("**Developed By Shyam Kumar**")
+
+            download_btn = gr.Button("Download My Custom File")
+            download_file = gr.File(label="Download File", interactive=False)
+
+            # Function that returns your custom file
+            def get_custom_file():
+                return "dummy_tickets.csv"   # Replace with your actual file path (csv, pdf, etc.)
+
+            # Connect button to file output
+            download_btn.click(fn=get_custom_file, inputs=None, outputs=download_file)
 # ------------------------
 # Launch
 # ------------------------

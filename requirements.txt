@@ -1,12 +1,13 @@
 fastapi
 uvicorn
-pydantic
 httpx
+pydantic
 python-multipart
 pandas
 scikit-learn
 crewai
 crewai-tools
-chromadb>=0.5.0
 python-dotenv
 sentence-transformers
+faiss
+gradio
