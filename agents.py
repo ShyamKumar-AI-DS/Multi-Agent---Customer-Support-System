@@ -23,7 +23,7 @@ agent1 = Agent(
     goal="Retrieve KB answers for customer support tickets",
     backstory="Internal FAQ assistant using ChromaDB",
     verbose=True,
-    llm=llm,
+    llm=llms,
     
 )
 
@@ -32,7 +32,7 @@ agent2 = Agent(
     goal="Diagnose technical issues, suggest steps, escalate if needed",
     backstory="Conservative, safe instructions for remediation",
     verbose=True,
-    llm=llm
+    llm=llms
 )
 
 agent3 = Agent(
@@ -40,7 +40,7 @@ agent3 = Agent(
     goal="Craft friendly customer-facing replies with empathy",
     backstory="Writes warm, concise, SLA-bound responses",
     verbose=True,
-    llm=llm
+    llm=llms
 )
 
 async def process_ticket_with_crew(ticket: TicketIn):
