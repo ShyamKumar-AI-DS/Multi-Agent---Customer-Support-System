@@ -1,6 +1,6 @@
-fastapi
-uvicorn
-httpx
+# fastapi
+# uvicorn
+# httpx
 pydantic
 python-multipart
 pandas
@@ -9,5 +9,5 @@ crewai
 crewai-tools
 python-dotenv
 sentence-transformers
-faiss
+faiss-cpu
 gradio
