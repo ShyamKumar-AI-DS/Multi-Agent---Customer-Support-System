@@ -24,15 +24,10 @@ if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY not found in environment variables")
 
 # instantiate the LangChain model
-groq_llm = ChatGroq(
+llms = ChatGroq(
     model="gpt-oss-120b",
     api_key=GROQ_API_KEY,
     temperature=0.3,
     max_tokens=512,
 )
 
-# wrap it in a simple callable CrewAI can use
-def llm(prompt: str):
-    """CrewAI-compatible callable that returns LLM output text."""
-    response = groq_llm.invoke(prompt)
-    return response.content if hasattr(response, "content") else str(response)
