@@ -11,3 +11,4 @@ python-dotenv
 sentence-transformers
 faiss-cpu
 gradio
+langchain-groq
