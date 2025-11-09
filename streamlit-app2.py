@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import asyncio
 import json
-from agents import process_ticket_with_crew, TicketIn  # Your CrewAI functions
+from agents import process_ticket_with_autogen, TicketIn  # Your CrewAI functions
 from utils import generate_id, now_iso
 
 # ------------------------
@@ -126,7 +126,7 @@ if st.button("Process Ticket"):
         ticket = TicketIn(**ticket_data)
 
         async def run_process():
-            return await process_ticket_with_crew(ticket)
+            return await process_ticket_with_autogen(ticket)
 
         result = asyncio.run(run_process())
         st.success("✅ Ticket processed with CrewAI agents")
