@@ -1,5 +1,4 @@
 from autogen import AssistantAgent, UserProxyAgent
-from dotenv import load_dotenv
 from typing import Optional, Dict, Any
 from pydantic import BaseModel
 from vectordb import search_chroma
@@ -9,11 +8,6 @@ from llm import llms
 # ------------------------------------------------------------------
 # 1. Load environment variables
 # ------------------------------------------------------------------
-load_dotenv()
-
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY not found. Please set it in your .env file.")
 
 # ------------------------------------------------------------------
 # 2. Define Ticket model
@@ -28,17 +22,6 @@ class TicketIn(BaseModel):
     Ticket_Priority: str
     Ticket_Channel: str
 
-
-# ------------------------------------------------------------------
-# 3. Configure Autogen LLM backend (Groq via OpenAI-compatible endpoint)
-# ------------------------------------------------------------------
-llm_config = {
-    "model": "gpt-oss-120b",  # or whichever Groq model slug you use
-    "api_key": GROQ_API_KEY,
-    "base_url": "https://api.groq.com/openai/v1",
-    "temperature": 0.3,
-    "max_tokens": 512,
-}
 
 # ------------------------------------------------------------------
 # 4. Define Agents
