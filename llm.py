@@ -24,10 +24,11 @@ if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY not found in environment variables")
 
 # instantiate the LangChain model
-llms = ChatGroq(
-    model="gpt-oss-120b",
-    api_key=GROQ_API_KEY,
-    temperature=0.3,
-    max_tokens=512,
-)
+def llms():
+    return ChatGroq(
+        model="openai/gpt-oss-120b",
+        temperature=0.3,
+        max_tokens=512,
+        groq_api_key=os.getenv("GROQ_API_KEY")
+    )
 
