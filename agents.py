@@ -1,90 +1,117 @@
-from crewai import Agent, Task, Crew
-import asyncio
-from llm import llms
-from typing import List, Optional, Dict, Any,Literal
+from autogen import AssistantAgent, UserProxyAgent
+from dotenv import load_dotenv
+from typing import Optional, Dict, Any
 from pydantic import BaseModel
 from vectordb import search_chroma
-TICKET_DB: Dict[str, Dict[str, Any]] = {}
+import os
+import asyncio
 
+# ------------------------------------------------------------------
+# 1. Load environment variables
+# ------------------------------------------------------------------
+load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY not found. Please set it in your .env file.")
+
+# ------------------------------------------------------------------
+# 2. Define Ticket model
+# ------------------------------------------------------------------
 class TicketIn(BaseModel):
-    Customer_ID: Optional[str] = None              # generated automatically if not provided
+    Customer_ID: Optional[str] = None
     Customer_Name: str
     Product_Purchased: Optional[str] = None
-    Ticket_Type: str  # was Literal["bug", ...], now freeform
+    Ticket_Type: str
     Ticket_Subject: str
     Ticket_Description: str
-    Ticket_Priority: str   # was Literal["low", ...]
-    Ticket_Channel: str    # was Literal["email", ...]
-    # date_created: Optional[datetime] = None      # auto-populated in system
+    Ticket_Priority: str
+    Ticket_Channel: str
 
 
-agent1 = Agent(
-    role="Knowledge Base RAG",
-    goal="Retrieve KB answers for customer support tickets",
-    backstory="Internal FAQ assistant using ChromaDB",
-    verbose=True,
-    llm=llms,
-    
+# ------------------------------------------------------------------
+# 3. Configure Autogen LLM backend (Groq via OpenAI-compatible endpoint)
+# ------------------------------------------------------------------
+llm_config = {
+    "model": "gpt-oss-120b",  # or whichever Groq model slug you use
+    "api_key": GROQ_API_KEY,
+    "base_url": "https://api.groq.com/openai/v1",
+    "temperature": 0.3,
+    "max_tokens": 512,
+}
+
+# ------------------------------------------------------------------
+# 4. Define Agents
+# ------------------------------------------------------------------
+kb_agent = AssistantAgent(
+    name="KnowledgeBaseRAG",
+    system_message=(
+        "You are an internal FAQ and knowledge base assistant. "
+        "You use ChromaDB search results to answer support tickets. "
+        "Return a JSON with: answer_short, sources, confidence, resolution_suggested, explainers."
+    ),
+    llm_config=llm_config,
 )
 
-agent2 = Agent(
-    role="Technical Support Specialist",
-    goal="Diagnose technical issues, suggest steps, escalate if needed",
-    backstory="Conservative, safe instructions for remediation",
-    verbose=True,
-    llm=llms
+tech_agent = AssistantAgent(
+    name="TechSupportSpecialist",
+    system_message=(
+        "You are a technical support expert. Diagnose the issue based on KB agent output. "
+        "Return JSON: diagnosis, steps, risk, should_escalate_to_human, human_context_note."
+    ),
+    llm_config=llm_config,
 )
 
-agent3 = Agent(
-    role="Empathetic Customer Communicator",
-    goal="Craft friendly customer-facing replies with empathy",
-    backstory="Writes warm, concise, SLA-bound responses",
-    verbose=True,
-    llm=llms
+comm_agent = AssistantAgent(
+    name="EmpatheticCommunicator",
+    system_message=(
+        "You write empathetic customer-facing replies. "
+        "Return JSON: customer_message and optional internal_note."
+    ),
+    llm_config=llm_config,
 )
 
-async def process_ticket_with_crew(ticket: TicketIn):
+# This acts as the orchestrator (replaces Crew)
+user_proxy = UserProxyAgent(
+    name="Coordinator",
+    human_input_mode="NEVER",
+)
+
+
+# ------------------------------------------------------------------
+# 5. Define the orchestration logic
+# ------------------------------------------------------------------
+async def process_ticket_with_autogen(ticket: TicketIn):
     query = f"{ticket.Ticket_Subject}\n{ticket.Ticket_Description}"
     kb_hits = search_chroma(query)
 
-    t1 = Task(
-        description=f"Answer customer query using KB.\nTicket: {ticket.dict()}\nEvidence: {kb_hits}",
-        agent=agent1,
-        expected_output=(
-            "A JSON object with the following fields:\n"
-            "- answer_short: string\n"
-            "- sources: list of objects (each with doc metadata)\n"
-            "- confidence: float between 0 and 1\n"
-            "- resolution_suggested: boolean\n"
-            "- explainers: optional list of strings"
-        ),
+    # Step 1: KB Agent retrieves knowledge-based insights
+    kb_prompt = (
+        f"Customer ticket:\n{ticket.dict()}\n\n"
+        f"Relevant knowledge base hits:\n{kb_hits}\n\n"
+        f"Generate JSON output as described in your system message."
     )
-
-    t2 = Task(
-        description=f"Diagnose and suggest steps based on Agent1 output.",
-        agent=agent2,
-        expected_output=(
-            "A JSON object with the following fields:\n"
-            "- diagnosis: string\n"
-            "- steps: list of strings\n"
-            "- risk: string (one of 'low', 'medium', 'high')\n"
-            "- should_escalate_to_human: boolean\n"
-            "- human_context_note: optional string"
-        ),
+    kb_response = await kb_agent.achat(kb_prompt)
+    
+    # Step 2: Technical agent analyzes the KB response
+    tech_prompt = (
+        f"Use the following KB analysis to diagnose the issue:\n{kb_response}\n\n"
+        "Generate your JSON as described."
     )
-
-    t3 = Task(
-        description=f"Write customer-facing empathetic message and internal note.",
-        agent=agent3,
-        expected_output=(
-            "A JSON object with the following fields:\n"
-            "- customer_message: string\n"
-            "- internal_note: optional string"
-        ),
+    tech_response = await tech_agent.achat(tech_prompt)
+    
+    # Step 3: Empathetic communicator crafts final message
+    comm_prompt = (
+        f"Based on the following technical diagnosis:\n{tech_response}\n\n"
+        f"Write a customer-facing empathetic message and optional internal note in JSON."
     )
+    comm_response = await comm_agent.achat(comm_prompt)
+
+    # Return final structured output
+    return {
+        "kb_agent_output": kb_response,
+        "tech_agent_output": tech_response,
+        "comm_agent_output": comm_response
+    }
 
 
-    crew = Crew(agents=[agent1, agent2, agent3], tasks=[t1, t2, t3])
-    loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(None, crew.kickoff)
-    return result
