@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from vectordb import search_chroma
 import os
 import asyncio
-
+from llm import llms
 # ------------------------------------------------------------------
 # 1. Load environment variables
 # ------------------------------------------------------------------
@@ -50,7 +50,7 @@ kb_agent = AssistantAgent(
         "You use ChromaDB search results to answer support tickets. "
         "Return a JSON with: answer_short, sources, confidence, resolution_suggested, explainers."
     ),
-    llm_config=llm_config,
+    llm_config=llms,
 )
 
 tech_agent = AssistantAgent(
@@ -59,7 +59,7 @@ tech_agent = AssistantAgent(
         "You are a technical support expert. Diagnose the issue based on KB agent output. "
         "Return JSON: diagnosis, steps, risk, should_escalate_to_human, human_context_note."
     ),
-    llm_config=llm_config,
+    llm_config=llms,
 )
 
 comm_agent = AssistantAgent(
@@ -68,7 +68,7 @@ comm_agent = AssistantAgent(
         "You write empathetic customer-facing replies. "
         "Return JSON: customer_message and optional internal_note."
     ),
-    llm_config=llm_config,
+    llm_config=llms,
 )
 
 # This acts as the orchestrator (replaces Crew)
