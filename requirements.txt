@@ -1,14 +1,10 @@
-# fastapi
-# uvicorn
-# httpx
 pydantic
 python-multipart
 pandas
 scikit-learn
-crewai
-crewai-tools
 python-dotenv
 sentence-transformers
-faiss-cpu
-gradio
-langchain-groq
+streamlit
+langchain-huggingface
+crewai
+chromadb

@@ -1,4 +1,4 @@
-# 🎧 Multi-Agent Customer Support System (CrewAI + Gradio)
+# 🎧 Multi-Agent Customer Support System (CrewAI)
 
 This project is an **AI-powered customer support system** that leverages **CrewAI multi-agent orchestration** to process customer tickets, generate empathetic replies, and assist support teams with internal notes.
 
@@ -31,7 +31,7 @@ Ticket descriptions are automatically converted into KB chunks, enabling more co
 ### 💡 Health Check
 Quick system status: number of tickets + KB chunks available.
 
-### 📊 Gradio Sidebar
+### 📊 Streamlit Sidebar
 Provides instructions, sample data download, and system details.
 
 ---
