@@ -9,4 +9,3 @@ langchain-huggingface
 crewai
 chromadb
 langchain-groq
-llmlite
