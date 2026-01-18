@@ -8,4 +8,4 @@ streamlit
 langchain-huggingface
 crewai
 chromadb
-
+groq
