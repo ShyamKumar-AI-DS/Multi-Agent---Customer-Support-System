@@ -1,3 +1,4 @@
+
 # import json
 # from llm import llms  # Your LangChain LLM (e.g., ChatGroq, ChatOpenAI)
 # from typing import List, Optional, Dict, Any, Literal
@@ -179,6 +180,23 @@ TICKET_DB: Dict[str, Dict[str, Any]] = {}
 # ------------------------------------------------------------------
 class TicketIn(BaseModel):
     Customer_ID: Optional[str] = None  # generated automatically if not provided
+
+from autogen import AssistantAgent, UserProxyAgent
+from typing import Optional, Dict, Any
+from pydantic import BaseModel
+from vectordb import search_chroma
+import os
+import asyncio
+from llm import llms
+# ------------------------------------------------------------------
+# 1. Load environment variables
+# ------------------------------------------------------------------
+
+# ------------------------------------------------------------------
+# 2. Define Ticket model
+# ------------------------------------------------------------------
+class TicketIn(BaseModel):
+    Customer_ID: Optional[str] = None
     Customer_Name: str
     Product_Purchased: Optional[str] = None
     Ticket_Type: str
@@ -260,8 +278,84 @@ async def process_ticket_with_crew(ticket: TicketIn):
             "A JSON object with the following fields:\n"
             "- customer_message: string\n"
             "- internal_note: optional string"
-        ),
+        )
     )
+
+
+# ------------------------------------------------------------------
+# 4. Define Agents
+# ------------------------------------------------------------------
+kb_agent = AssistantAgent(
+    name="KnowledgeBaseRAG",
+    system_message=(
+        "You are an internal FAQ and knowledge base assistant. "
+        "You use ChromaDB search results to answer support tickets. "
+        "Return a JSON with: answer_short, sources, confidence, resolution_suggested, explainers."
+    ),
+    llm_config=llms,
+)
+
+tech_agent = AssistantAgent(
+    name="TechSupportSpecialist",
+    system_message=(
+        "You are a technical support expert. Diagnose the issue based on KB agent output. "
+        "Return JSON: diagnosis, steps, risk, should_escalate_to_human, human_context_note."
+    ),
+    llm_config=llms,
+)
+
+comm_agent = AssistantAgent(
+    name="EmpatheticCommunicator",
+    system_message=(
+        "You write empathetic customer-facing replies. "
+        "Return JSON: customer_message and optional internal_note."
+    ),
+    llm_config=llms,
+)
+
+# This acts as the orchestrator (replaces Crew)
+user_proxy = UserProxyAgent(
+    name="Coordinator",
+    human_input_mode="NEVER",
+)
+
+
+# ------------------------------------------------------------------
+# 5. Define the orchestration logic
+# ------------------------------------------------------------------
+async def process_ticket_with_autogen(ticket: TicketIn):
+    query = f"{ticket.Ticket_Subject}\n{ticket.Ticket_Description}"
+    kb_hits = search_chroma(query)
+
+    # Step 1: KB Agent retrieves knowledge-based insights
+    kb_prompt = (
+        f"Customer ticket:\n{ticket.dict()}\n\n"
+        f"Relevant knowledge base hits:\n{kb_hits}\n\n"
+        f"Generate JSON output as described in your system message."
+    )
+    kb_response = await kb_agent.achat(kb_prompt)
+    
+    # Step 2: Technical agent analyzes the KB response
+    tech_prompt = (
+        f"Use the following KB analysis to diagnose the issue:\n{kb_response}\n\n"
+        "Generate your JSON as described."
+    )
+    tech_response = await tech_agent.achat(tech_prompt)
+    
+    # Step 3: Empathetic communicator crafts final message
+    comm_prompt = (
+        f"Based on the following technical diagnosis:\n{tech_response}\n\n"
+        f"Write a customer-facing empathetic message and optional internal note in JSON."
+
+    )
+    comm_response = await comm_agent.achat(comm_prompt)
+
+    # Return final structured output
+    return {
+        "kb_agent_output": kb_response,
+        "tech_agent_output": tech_response,
+        "comm_agent_output": comm_response
+    }
 
     crew = Crew(
         agents=[agent1, agent2, agent3],
@@ -272,3 +366,4 @@ async def process_ticket_with_crew(ticket: TicketIn):
     result = await loop.run_in_executor(None, crew.kickoff)
 
     return result
+
