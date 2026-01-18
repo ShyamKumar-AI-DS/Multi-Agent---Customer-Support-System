@@ -42,6 +42,11 @@ Provides instructions, sample data download, and system details.
 
 ---
 
+### 📊 Outputs
+
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/7cf12e88-a385-424a-888e-70b333398ea4" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/c3db4296-c85b-4f38-b980-3d29de90be2d" />
+
 ## 📦 Future Improvements
 
 - ✅ Database integration (SQLite/Postgres) for persistence  
